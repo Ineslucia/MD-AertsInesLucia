@@ -1,0 +1,89 @@
+//2
+fun main() {
+    println("Use the val keyword when the value doesn't change.")
+    println("Use the var keyword when the value can change.")
+    println("When you define a function, you define the parameters that can be passed to it")
+    println("When you call a function, you pass arguments for the paeameters.")
+}
+
+//3
+fun main() {
+    println("New chat message from a friend")
+}
+
+//4
+fun main() {
+    var discountPercentage: Int = 0
+    val offer: String = ""
+    val item = "Google Chromecast"
+    discounPercentage = 20
+    offer = "Sale - Up to $discountPercentage% discount on $item! Hurry up!"
+    
+    println(offer)
+}
+
+//5 stap1: 20+30=50 The total party size is: 50
+//stap2:
+fun main() {
+    val numberOfAdult = 20
+    val numberOfKids = 30
+    val total = numberOfAdult + numberOfKids
+    println("The total party size is: $total")
+}
+//6 stap1:
+//stap2:
+fun main() {
+    val baseSalary = 5000
+    val bonusAmount = 1000
+    val totalSalary = "$baseSalary + $bonusAmount"
+    println("Congratulations for your bonus! You will receive a total of $totalSalary (additional bonus).")
+}
+//7 stap1:
+fun main() {
+    val firstNumber = 10
+    val secondNumber = 5
+    val result = firstNumber + secondNumber
+    
+    println("$firstNumber + $secondNumber = $result")
+}
+
+//stap2:
+fun main() {
+    val firstNumber = 10
+    val secondNumber = 5
+    val thirdNumber = 8
+    
+    val result = add(firstNumber, secondNumber)
+    val anotherResult = add(firstNumber, thrirdNumber)
+    
+    println("$firstNumber + $secondNumber = $result")
+    println("$firstNumber + $thirdNumber = $anotherResult")
+}
+
+//step3:
+
+//8 step1:
+
+fun main() {
+    val operatingSystem = "Chrome OS"
+    val emailId = "sample@gmail.com"
+    
+    println()
+}
+
+//step2:
+
+fun main() {
+    val firstUserEmailId = "user_one@gmail.com"
+    
+    //The following line of code assumes that you named your parameter as EmailId
+    //If you named it differently, feel free to update the name
+    println(displayAlertMessage(emailId = firstUserEmailId))
+    println()
+    
+    val secondUserOperatingSystem = "Windows"
+    val secondUserEmailId = "user_two@gamil.com"
+    
+    println(dispalyAlertMessage(secondUserOperatingSystem, secondUserEmailId))
+    println()
+}
