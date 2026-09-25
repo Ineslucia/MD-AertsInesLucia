@@ -87,3 +87,59 @@ fun main() {
     println(dispalyAlertMessage(secondUserOperatingSystem, secondUserEmailId))
     println()
 }
+
+//9
+
+fun main() {
+    val Steps = 4000
+    val caloriesBurned = stepsTocalories (steps);
+    println("Walking $steps steps burns $caloriesBurned calories")
+}
+
+fun stepsToCalories (NumberOfSteps: Int): Double {
+    val caloriesPerStep = 0.04
+    val totalCalories = NumberOfSteps * caloriesPerStep
+    return totalCalories
+}
+
+
+//10
+fun spentMoreTimeToday(timeSpentTday: Int, timeSpentYesterday: Int): Boolean{
+    return timeSpentToday > timeSpentYesterday
+}
+
+//11
+
+fun printWeather(city: String, lowTemp: Int, highTemp: Int, rainChance:int) {
+    println("City: $city")
+    println("Low temperature: $lowTemp, High temperature: $highTemp")
+    println("Chance of rain: $rainChance%")
+}
+
+fun main() {
+    printWeather("Ankara", 27, 31, 82)
+    printWeather("Tokyo", 32, 36, 10)
+    printWeather("Cape Town", 59, 64, 2)
+    printWeather("Guatemala city", 50, 55, 7)
+}
+
+
+//12
+fun calculateDiscountedPrice(price: Int, discountPrecentage: Int): Double{
+    val discountAmount = price * (discountPercentage / 100.0)
+    return price - discountedAmount
+} 
+
+fun main() {
+    val itemName = "Wireless Headphone"
+    val originalPrice = 120
+    val discountPrecentage = 15
+    
+    val finalPrice = calculateDiscountedPrice(originalPrice, discountPrecentage)
+    
+    println("Item: $itemName")
+    println("Original price: $originalPrice")
+    println("Discount: $discountPercentage%")
+    println("Final price after discount: $finalPrice")
+}
+
