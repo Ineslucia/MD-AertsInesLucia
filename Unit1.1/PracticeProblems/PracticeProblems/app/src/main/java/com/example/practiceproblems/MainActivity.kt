@@ -1,0 +1,192 @@
+package com.example.practiceproblems
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.practiceproblems.ui.theme.PracticeProblemsTheme
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            PracticeProblemsTheme {
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    Greeting(
+                        name = "Android",
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                }
+            }
+        }
+    }
+}
+//2
+fun main() {
+    println("Use the val keyword when the value doesn't change.")
+    println("Use the var keyword when the value can change.")
+    println("When you define a function, you define the parameters that can be passed to it")
+    println("When you call a function, you pass arguments for the paeameters.")
+}
+
+//3
+fun main() {
+    println("New chat message from a friend")
+}
+
+//4
+fun main() {
+    var discountPercentage: Int = 0
+    val offer: String = ""
+    val item = "Google Chromecast"
+    discounPercentage = 20
+    offer = "Sale - Up to $discountPercentage% discount on $item! Hurry up!"
+
+    println(offer)
+}
+
+//5 stap1: 20+30=50 The total party size is: 50
+//stap2:
+fun main() {
+    val numberOfAdult = 20
+    val numberOfKids = 30
+    val total = numberOfAdult + numberOfKids
+    println("The total party size is: $total")
+}
+//6 stap1:
+//stap2:
+fun main() {
+    val baseSalary = 5000
+    val bonusAmount = 1000
+    val totalSalary = "$baseSalary + $bonusAmount"
+    println("Congratulations for your bonus! You will receive a total of $totalSalary (additional bonus).")
+}
+//7 stap1:
+fun main() {
+    val firstNumber = 10
+    val secondNumber = 5
+    val result = firstNumber + secondNumber
+
+    println("$firstNumber + $secondNumber = $result")
+}
+
+//stap2:
+fun main() {
+    val firstNumber = 10
+    val secondNumber = 5
+    val thirdNumber = 8
+
+    val result = add(firstNumber, secondNumber)
+    val anotherResult = add(firstNumber, thrirdNumber)
+
+    println("$firstNumber + $secondNumber = $result")
+    println("$firstNumber + $thirdNumber = $anotherResult")
+}
+
+//step3:
+
+//8 step1:
+
+fun main() {
+    val operatingSystem = "Chrome OS"
+    val emailId = "sample@gmail.com"
+
+    println()
+}
+
+//step2:
+
+fun main() {
+    val firstUserEmailId = "user_one@gmail.com"
+
+    //The following line of code assumes that you named your parameter as EmailId
+    //If you named it differently, feel free to update the name
+    println(displayAlertMessage(emailId = firstUserEmailId))
+    println()
+
+    val secondUserOperatingSystem = "Windows"
+    val secondUserEmailId = "user_two@gamil.com"
+
+    println(dispalyAlertMessage(secondUserOperatingSystem, secondUserEmailId))
+    println()
+}
+
+//9
+
+fun main() {
+    val Steps = 4000
+    val caloriesBurned = stepsTocalories (steps);
+    println("Walking $steps steps burns $caloriesBurned calories")
+}
+
+fun stepsToCalories (NumberOfSteps: Int): Double {
+    val caloriesPerStep = 0.04
+    val totalCalories = NumberOfSteps * caloriesPerStep
+    return totalCalories
+}
+
+
+//10
+fun spentMoreTimeToday(timeSpentTday: Int, timeSpentYesterday: Int): Boolean{
+    return timeSpentToday > timeSpentYesterday
+}
+
+//11
+
+fun printWeather(city: String, lowTemp: Int, highTemp: Int, rainChance:int) {
+    println("City: $city")
+    println("Low temperature: $lowTemp, High temperature: $highTemp")
+    println("Chance of rain: $rainChance%")
+}
+
+fun main() {
+    printWeather("Ankara", 27, 31, 82)
+    printWeather("Tokyo", 32, 36, 10)
+    printWeather("Cape Town", 59, 64, 2)
+    printWeather("Guatemala city", 50, 55, 7)
+}
+
+
+//12
+fun calculateDiscountedPrice(price: Int, discountPrecentage: Int): Double{
+    val discountAmount = price * (discountPercentage / 100.0)
+    return price - discountedAmount
+}
+
+fun main() {
+    val itemName = "Wireless Headphone"
+    val originalPrice = 120
+    val discountPrecentage = 15
+
+    val finalPrice = calculateDiscountedPrice(originalPrice, discountPrecentage)
+
+    println("Item: $itemName")
+    println("Original price: $originalPrice")
+    println("Discount: $discountPercentage%")
+    println("Final price after discount: $finalPrice")
+}
+
+
+@Composable
+fun Greeting(name: String, modifier: Modifier = Modifier) {
+    Text(
+        text = "Hello $name!",
+        modifier = modifier
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun GreetingPreview() {
+    PracticeProblemsTheme {
+        Greeting("Android")
+    }
+}
