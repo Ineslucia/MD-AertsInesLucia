@@ -84,6 +84,31 @@ fun TipTimeLayout() {
  * according to the local currency.
  * Example would be "$10.00".
  */
+var amountInput by remember { mutableStateOf("") }
+var tipInput by remember { mutableStateOf("") }
+
+val amount = amountInput.toDoubleOrNull() ?: 0.0
+val tipPercentage = tipInput.toDoubleOrNull() ?: 0.0
+
+val tip = amount * tipPercentage / 100
+
+Column {
+    OutlinedTextField(
+        value = amountInput,
+        onValueChange = { amountInput = it },
+        label = { Text("Bill Amount") }
+    )
+
+    OutlinedTextField(
+        value = tipInput,
+        onValueChange = { tipInput = it },
+        label = { Text("Tip Percentage") }
+    )
+
+    Text(
+        text = "Tip amount: $${"%.2f".format(tip)}"
+    )
+}
 private fun calculateTip(amount: Double, tipPercent: Double = 15.0): String {
     val tip = tipPercent / 100 * amount
     return NumberFormat.getCurrencyInstance().format(tip)
