@@ -45,6 +45,9 @@ fun friendshipApp(modifier: Modifier = Modifier) {
         modifier = modifier,
         topBar = {
             CenterAlignedTopAppBar(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = PastelPink
+                ),
                 title = {
                     Text(
                         text = "10 Stars of Friendship",
@@ -86,6 +89,8 @@ fun friendshipCard(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(16.dp)
+                colors = CardDefaults.cardColors(
+                containerColor = SoftYellow
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
