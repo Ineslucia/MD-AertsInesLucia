@@ -47,6 +47,12 @@ interface RecipeApiService {
         @Path("id") recipeId: Int
     ): RecipeAddResponse
 
+    @DELETE("recepten/{id}")
+    suspend fun deleteRecipe(
+        @Header("Authorization") token: String,
+        @Path("id") recipeId: Int
+    ): RecipeAddResponse
+
     companion object {
         private const val BASE_URL = "https://stevenop.be/recipes/api/"
 

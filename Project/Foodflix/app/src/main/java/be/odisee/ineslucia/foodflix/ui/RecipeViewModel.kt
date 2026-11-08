@@ -31,6 +31,35 @@ class RecipeViewModel : ViewModel() {
             SortOption.DATE -> recipes.sortedByDescending { it.datumAangemaakt ?: "" }
         }
 
+    val myRecipes: List<Recipe>
+        get() = recipes.filter { it.gebruikerAangemaaktId == 288 || it.gebruikerAangemaaktAlias == "Learn Kotlin today?" }
+
+    val favoriteRecipes: List<Recipe>
+        get() = recipes.filter { it.gebruikerGeliked == 1 }
+
+    var searchQuery by mutableStateOf("")
+        private set
+
+    fun updateSearchQuery(query: String) {
+        searchQuery = query
+    }
+
+    val searchResults: List<Recipe>
+        get() = if (searchQuery.isBlank()) {
+            recipes
+        } else {
+            recipes.filter { it.titel.contains(searchQuery, ignoreCase = true) }
+        }
+
+    private var customUserAlias by mutableStateOf<String?>(null)
+
+    val userAlias: String
+        get() = customUserAlias ?: (recipes.firstOrNull { it.gebruikerAangemaaktId == 288 }?.gebruikerAangemaaktAlias ?: "Foodflix User")
+
+    fun updateUserAlias(newName: String) {
+        customUserAlias = newName
+    }
+
     var isLoading by mutableStateOf(false)
         private set
 
@@ -80,6 +109,18 @@ class RecipeViewModel : ViewModel() {
         }
     }
 
+    fun deleteRecipe(recipeId: Int) {
+        viewModelScope.launch {
+            try {
+                val token = "Bearer yeg6q15g0ipj66tei8fla0hw91ws7aw"
+                apiService.deleteRecipe(token, recipeId)
+                fetchRecipes()
+            } catch (e: Exception) {
+                errorMessage = e.localizedMessage ?: "Failed to delete recipe"
+            }
+        }
+    }
+
     fun toggleLike(recipe: Recipe) {
         viewModelScope.launch {
             try {
@@ -95,5 +136,4 @@ class RecipeViewModel : ViewModel() {
             }
         }
     }
-
 }
