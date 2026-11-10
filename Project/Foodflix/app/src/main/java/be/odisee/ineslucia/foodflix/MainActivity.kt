@@ -42,6 +42,36 @@ import be.odisee.ineslucia.foodflix.ui.SortOption
 import be.odisee.ineslucia.foodflix.ui.theme.FoodflixTheme
 
 /**
+ * ============================================================================
+ * FOODFLIX APP - ARCHITECTURE & CONFIGURATION OVERVIEW
+ * ============================================================================
+ *
+ * 1. RETROFIT (Networking):
+ *    - Configured in [be.odisee.ineslucia.foodflix.network.RecipeApiService].
+ *    - Handles REST API communication (fetching recipes, adding recipes, liking/unliking,
+ *      deleting recipes, and fetching likes) using OkHttp and Gson Converter.
+ *
+ * 2. NAVIGATION (UI Flow):
+ *    - Implemented via Jetpack Compose state-driven navigation and bottom tabs (Home, Favorites, Profile).
+ *    - Dynamic routing to `RecipeDetailScreen` when selecting a recipe, plus dialogs for adding recipes and editing profiles.
+ *
+ * 3. DATASTORE / FAVORITES (State & Persistence):
+ *    - Favorites, user aliases, comments, and sorting preferences are managed reactively
+ *      via [RecipeViewModel] and synchronized with backend API persistence.
+ *
+ * 4. THEME CONFIGURATION & APP ICONS:
+ *    - Theme: Material 3 dynamic color scheme configured in [be.odisee.ineslucia.foodflix.ui.theme.FoodflixTheme]
+ *      with manual light/dark mode toggling support.
+ *    - App Icons: Adaptive launcher icons configured in `res/mipmap-anydpi-v26` and `res/drawable`.
+ *
+ * 5. AI USAGE NOTICE:
+ *    - Developed with assistance from AI development tooling (Android Studio AI Assistant),
+ *      which supported architectural design, code refactoring, Jetpack Compose UI composition,
+ *      and inline comment generation.
+ * ============================================================================
+ */
+
+/**
  * Main activity of the Foodflix application.
  * Acts as the entry point that initializes edge-to-edge display and hosts the root Compose UI with theme switching support.
  */
@@ -1069,7 +1099,8 @@ fun RecipeItemCard(recipe: Recipe, onLikeClick: (Recipe) -> Unit, onClick: () ->
 // PREVIEWS
 // ==========================================
 
-private val sampleRecipesPreview = listOf(
+private val sampleRecipesPreview: List<Recipe>
+    get() = listOf(
     Recipe(
         id = 1,
         titel = "Spaghetti Carbonara",
