@@ -82,7 +82,7 @@ class RecipeViewModel : ViewModel() {
                 val token = "Bearer yeg6q15g0ipj66tei8fla0hw91ws7aw"
                 val response = apiService.getRecipeLikes(token, recipeId)
                 recipeLikesMap = recipeLikesMap + (recipeId to response.data)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // ignore
             }
         }
@@ -128,7 +128,6 @@ class RecipeViewModel : ViewModel() {
                 val token = "Bearer yeg6q15g0ipj66tei8fla0hw91ws7aw"
                 val response = apiService.getAllRecipes(token)
                 recipes = response.data
-                // Refresh likes for any recipes currently loaded
                 recipes.forEach { fetchLikesForRecipe(it.id) }
             } catch (e: Exception) {
                 errorMessage = e.localizedMessage ?: "Unknown error occurred"
@@ -143,12 +142,13 @@ class RecipeViewModel : ViewModel() {
         ingredienten: String,
         stappen: String,
         tijd: Int,
+        afbeelding: String,
         onSuccess: () -> Unit
     ) {
         viewModelScope.launch {
             try {
                 val token = "Bearer yeg6q15g0ipj66tei8fla0hw91ws7aw"
-                apiService.addRecipe(token, titel, ingredienten, stappen, tijd)
+                apiService.addRecipe(token, titel, ingredienten, stappen, tijd, afbeelding)
                 fetchRecipes()
                 onSuccess()
             } catch (e: Exception) {

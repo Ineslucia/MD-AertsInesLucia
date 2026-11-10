@@ -44,7 +44,8 @@ interface RecipeApiService {
         @Field("titel") titel: String,
         @Field("ingredienten") ingredienten: String,
         @Field("stappen") stappen: String,
-        @Field("tijd") tijd: Int
+        @Field("tijd") tijd: Int,
+        @Field("afbeelding") afbeelding: String
     ): RecipeAddResponse
 
     @POST("recepten/{id}/like")

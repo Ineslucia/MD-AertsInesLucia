@@ -8,14 +8,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -32,8 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import be.odisee.ineslucia.foodflix.model.Recipe
@@ -95,8 +93,8 @@ fun RecipeScreen(
         onSortOptionSelected = { viewModel.updateSortOption(it) },
         onSearchQueryChanged = { viewModel.updateSearchQuery(it) },
         onLikeClick = { viewModel.toggleLike(it) },
-        onAddRecipe = { titel, ing, stap, tijd, onSuccess ->
-            viewModel.addRecipe(titel, ing, stap, tijd, onSuccess)
+        onAddRecipe = { titel, ing, stap, tijd, afbeelding, onSuccess ->
+            viewModel.addRecipe(titel, ing, stap, tijd, afbeelding, onSuccess)
         },
         onDeleteRecipe = { viewModel.deleteRecipe(it) },
         onUpdateAlias = { viewModel.updateUserAlias(it) },
@@ -131,7 +129,7 @@ fun RecipeScreenContent(
     onSortOptionSelected: (SortOption) -> Unit,
     onSearchQueryChanged: (String) -> Unit,
     onLikeClick: (Recipe) -> Unit,
-    onAddRecipe: (String, String, String, Int, () -> Unit) -> Unit,
+    onAddRecipe: (String, String, String, Int, String, () -> Unit) -> Unit,
     onDeleteRecipe: (Int) -> Unit,
     onUpdateAlias: (String) -> Unit,
     onAddComment: (Int, String, String) -> Unit,
@@ -144,7 +142,7 @@ fun RecipeScreenContent(
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
     var selectedRecipe by remember { mutableStateOf<Recipe?>(null) }
-    var selectedTab by remember { mutableIntStateOf(0) } // 0 = Home, 1 = Discover, 2 = Search, 3 = Favorites, 4 = Profile
+    var selectedTab by remember { mutableIntStateOf(0) } // 0 = Home, 1 = Search, 2 = Favorites, 3 = Profile
 
     when {
         selectedRecipe != null -> {
@@ -169,9 +167,8 @@ fun RecipeScreenContent(
                             Text(
                                 when (selectedTab) {
                                     0 -> "Foodflix Recipes"
-                                    1 -> "Discover"
-                                    2 -> "Search Recipes"
-                                    3 -> "Favorite Recipes"
+                                    1 -> "Search Recipes"
+                                    2 -> "Favorite Recipes"
                                     else -> "My Profile"
                                 }
                             )
@@ -199,28 +196,22 @@ fun RecipeScreenContent(
                             onClick = { selectedTab = 0 }
                         )
                         NavigationBarItem(
-                            icon = { Icon(Icons.Default.Explore, contentDescription = "Discover") },
-                            label = { Text("Discover") },
+                            icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                            label = { Text("Search") },
                             selected = selectedTab == 1,
                             onClick = { selectedTab = 1 }
                         )
                         NavigationBarItem(
-                            icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-                            label = { Text("Search") },
+                            icon = { Icon(Icons.Default.Favorite, contentDescription = "Favorites") },
+                            label = { Text("Favorites") },
                             selected = selectedTab == 2,
                             onClick = { selectedTab = 2 }
                         )
                         NavigationBarItem(
-                            icon = { Icon(Icons.Default.Favorite, contentDescription = "Favorites") },
-                            label = { Text("Favorites") },
-                            selected = selectedTab == 3,
-                            onClick = { selectedTab = 3 }
-                        )
-                        NavigationBarItem(
                             icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
                             label = { Text("Profile") },
-                            selected = selectedTab == 4,
-                            onClick = { selectedTab = 4 }
+                            selected = selectedTab == 3,
+                            onClick = { selectedTab = 3 }
                         )
                     }
                 },
@@ -283,13 +274,6 @@ fun RecipeScreenContent(
                             }
                         }
                         1 -> {
-                            DiscoverTabContent(
-                                recipes = recipes,
-                                onLikeClick = onLikeClick,
-                                onItemClick = { recipe -> selectedRecipe = recipe }
-                            )
-                        }
-                        2 -> {
                             SearchTabContent(
                                 searchQuery = searchQuery,
                                 onQueryChanged = onSearchQueryChanged,
@@ -298,7 +282,7 @@ fun RecipeScreenContent(
                                 onItemClick = { recipe -> selectedRecipe = recipe }
                             )
                         }
-                        3 -> {
+                        2 -> {
                             FavoritesTabContent(
                                 favoriteRecipes = favoriteRecipes,
                                 onLikeClick = onLikeClick,
@@ -320,8 +304,8 @@ fun RecipeScreenContent(
                     if (showAddDialog) {
                         AddRecipeDialog(
                             onDismiss = { showAddDialog = false },
-                            onSave = { titel, ing, stap, tijd ->
-                                onAddRecipe(titel, ing, stap, tijd) {
+                            onSave = { titel, ing, stap, tijd, afbeelding ->
+                                onAddRecipe(titel, ing, stap, tijd, afbeelding) {
                                     showAddDialog = false
                                 }
                             }
@@ -927,24 +911,27 @@ fun SortSection(selectedOption: SortOption, onOptionSelected: (SortOption) -> Un
 }
 
 /**
- * Dialog composable for entering details to add a new recipe.
+ * Dialog composable for entering details and image URL to add a new recipe.
  */
 @Composable
 fun AddRecipeDialog(
     onDismiss: () -> Unit,
-    onSave: (String, String, String, Int) -> Unit
+    onSave: (String, String, String, Int, String) -> Unit
 ) {
     var titel by remember { mutableStateOf("") }
     var ingredienten by remember { mutableStateOf("") }
     var stappen by remember { mutableStateOf("") }
     var tijdStr by remember { mutableStateOf("") }
+    var afbeelding by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Add New Recipe") },
         text = {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedTextField(
@@ -971,6 +958,12 @@ fun AddRecipeDialog(
                     label = { Text("Time (minutes)") },
                     modifier = Modifier.fillMaxWidth()
                 )
+                OutlinedTextField(
+                    value = afbeelding,
+                    onValueChange = { afbeelding = it },
+                    label = { Text("Image URL (optional)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         },
         confirmButton = {
@@ -978,7 +971,7 @@ fun AddRecipeDialog(
                 onClick = {
                     val tijd = tijdStr.toIntOrNull() ?: 15
                     if (titel.isNotBlank()) {
-                        onSave(titel, ingredienten, stappen, tijd)
+                        onSave(titel, ingredienten, stappen, tijd, afbeelding)
                     }
                 }
             ) {
@@ -1072,356 +1065,114 @@ fun RecipeItemCard(recipe: Recipe, onLikeClick: (Recipe) -> Unit, onClick: () ->
     }
 }
 
-@Preview(showBackground = true)
+// ==========================================
+// PREVIEWS
+// ==========================================
+
+private val sampleRecipesPreview = listOf(
+    Recipe(
+        id = 1,
+        titel = "Spaghetti Carbonara",
+        ingredienten = "Spaghetti, Eieren, Guanciale, Pecorino, Peper",
+        stappen = "1. Kook pasta. 2. Bak guanciale. 3. Meng eieren met kaas. 4. Voeg samen.",
+        tijd = 20,
+        datumAangemaakt = "2025-01-15 12:00:00",
+        gebruikerAangemaaktId = 288,
+        gebruikerAangemaaktAlias = "Chef Ines",
+        afbeelding = "https://images.unsplash.com/photo-1612874742237-6526221588e3",
+        likes = 12,
+        commentaar = 3,
+        gebruikerGeliked = 1
+    ),
+    Recipe(
+        id = 2,
+        titel = "Pannenkoeken",
+        ingredienten = "Bloem, Melk, Eieren, Boter",
+        stappen = "1. Meng ingrediënten. 2. Bak in de pan.",
+        tijd = 15,
+        datumAangemaakt = "2025-01-16 10:00:00",
+        gebruikerAangemaaktId = 100,
+        gebruikerAangemaaktAlias = "Lucia",
+        afbeelding = null,
+        likes = 5,
+        commentaar = 1,
+        gebruikerGeliked = 0
+    )
+)
+
+@Preview(showBackground = true, name = "Recipe Screen (Light)")
 @Composable
-fun RecipeItemCardPreview() {
-    FoodflixTheme {
-        RecipeItemCard(
-            recipe = Recipe(
-                id = 1,
-                titel = "Spaghetti Bolognese",
-                ingredienten = "Pasta, minced meat, tomato sauce, garlic, onions",
-                stappen = "1. Cook pasta until al dente.\n2. Brown minced meat with onions and garlic.\n3. Add tomato sauce and simmer.",
-                tijd = 30,
-                datumAangemaakt = "2025-01-01",
-                gebruikerAangemaaktId = 288,
-                gebruikerAangemaaktAlias = "Ines",
-                afbeelding = null,
-                likes = 12,
-                commentaar = 3,
-                gebruikerGeliked = 1
-            ),
-            onLikeClick = {},
-            onClick = {}
-        )
-    }
-}
-
-/**
- * Composable for the Discover tab, designed with a mobile Netflix-style layout
- * featuring a featured hero banner and horizontal category rows.
- */
-@Composable
-fun DiscoverTabContent(
-    recipes: List<Recipe>,
-    onLikeClick: (Recipe) -> Unit,
-    onItemClick: (Recipe) -> Unit
-) {
-    val trendingRecipes = recipes.sortedByDescending { it.likes }
-    val quickRecipes = recipes.filter { it.tijd <= 20 }
-    val featuredRecipe = recipes.maxByOrNull { it.likes } ?: recipes.firstOrNull()
-    val chefRecipes = recipes.filter { !it.gebruikerAangemaaktAlias.isNullOrEmpty() }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
-    ) {
-        // Netflix Hero Banner
-        if (featuredRecipe != null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(340.dp)
-                    .clickable { onItemClick(featuredRecipe) }
-            ) {
-                if (!featuredRecipe.afbeelding.isNullOrEmpty()) {
-                    AsyncImage(
-                        model = featuredRecipe.afbeelding,
-                        contentDescription = featuredRecipe.titel,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                text = featuredRecipe.titel,
-                                style = MaterialTheme.typography.headlineLarge,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
-                }
-
-                IconButton(
-                    onClick = { onLikeClick(featuredRecipe) },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                ) {
-                    Icon(
-                        imageVector = if (featuredRecipe.gebruikerGeliked == 1) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = "Like",
-                        tint = if (featuredRecipe.gebruikerGeliked == 1) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "🔥 FEATURED DISCOVERY",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = featuredRecipe.titel,
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "⏱️ ${featuredRecipe.tijd} min",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Text(
-                                text = "❤️ ${featuredRecipe.likes} Likes",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                        Button(
-                            onClick = { onItemClick(featuredRecipe) },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("▶ Start Cooking")
-                        }
-                    }
-                }
-            }
-        }
-
-        // Horizontal Category Rows (Netflix style)
-        RecipeCategoryRow(
-            categoryTitle = "Trending Now",
-            recipes = trendingRecipes,
-            onLikeClick = onLikeClick,
-            onItemClick = onItemClick
-        )
-
-        if (quickRecipes.isNotEmpty()) {
-            RecipeCategoryRow(
-                categoryTitle = "Quick Bites (Under 20 min)",
-                recipes = quickRecipes,
-                onLikeClick = onLikeClick,
-                onItemClick = onItemClick
-            )
-        }
-
-        if (chefRecipes.isNotEmpty()) {
-            RecipeCategoryRow(
-                categoryTitle = "Community Creations",
-                recipes = chefRecipes,
-                onLikeClick = onLikeClick,
-                onItemClick = onItemClick
-            )
-        }
-    }
-}
-
-@Composable
-fun RecipeCategoryRow(
-    categoryTitle: String,
-    recipes: List<Recipe>,
-    onLikeClick: (Recipe) -> Unit,
-    onItemClick: (Recipe) -> Unit
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = categoryTitle,
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(recipes) { recipe ->
-                NetflixRecipeCard(recipe = recipe, onLikeClick = onLikeClick, onClick = { onItemClick(recipe) })
-            }
-        }
-    }
-}
-
-@Composable
-fun NetflixRecipeCard(recipe: Recipe, onLikeClick: (Recipe) -> Unit, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .width(130.dp)
-            .height(180.dp)
-            .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            if (!recipe.afbeelding.isNullOrEmpty()) {
-                AsyncImage(
-                    model = recipe.afbeelding,
-                    contentDescription = recipe.titel,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.secondaryContainer
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = recipe.titel,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(8.dp)
-                        )
-                    }
-                }
-            }
-
-            IconButton(
-                onClick = { onLikeClick(recipe) },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(36.dp)
-            ) {
-                Icon(
-                    imageVector = if (recipe.gebruikerGeliked == 1) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    contentDescription = "Like",
-                    tint = if (recipe.gebruikerGeliked == 1) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
-            ) {
-                Column(
-                    modifier = Modifier.padding(6.dp)
-                ) {
-                    Text(
-                        text = recipe.titel,
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1
-                    )
-                    Text(
-                        text = "${recipe.tijd}m • ❤️ ${recipe.likes}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun RecipeScreenPreview() {
-    var darkTheme by remember { mutableStateOf(false) }
-    FoodflixTheme(darkTheme = darkTheme) {
+fun RecipeScreenContentPreview() {
+    FoodflixTheme(darkTheme = false) {
         RecipeScreenContent(
-            recipes = listOf(
-                Recipe(
-                    id = 1,
-                    titel = "Spaghetti Bolognese",
-                    ingredienten = "Pasta, minced meat, tomato sauce",
-                    stappen = "Cook pasta. Fry meat. Mix.",
-                    tijd = 30,
-                    datumAangemaakt = "2025-01-01",
-                    gebruikerAangemaaktId = 288,
-                    gebruikerAangemaaktAlias = "Ines",
-                    afbeelding = null,
-                    likes = 12,
-                    commentaar = 1,
-                    gebruikerGeliked = 1
-                ),
-                Recipe(
-                    id = 2,
-                    titel = "Pancakes",
-                    ingredienten = "Flour, milk, eggs, sugar",
-                    stappen = "Mix ingredients. Fry on pan.",
-                    tijd = 15,
-                    datumAangemaakt = "2025-01-02",
-                    gebruikerAangemaaktId = 288,
-                    gebruikerAangemaaktAlias = "Ines",
-                    afbeelding = null,
-                    likes = 8,
-                    commentaar = 0,
-                    gebruikerGeliked = 0
-                )
-            ),
-            myRecipes = listOf(
-                Recipe(
-                    id = 2,
-                    titel = "Pancakes",
-                    ingredienten = "Flour, milk, eggs, sugar",
-                    stappen = "Mix ingredients. Fry on pan.",
-                    tijd = 15,
-                    datumAangemaakt = "2025-01-02",
-                    gebruikerAangemaaktId = 288,
-                    gebruikerAangemaaktAlias = "Ines",
-                    afbeelding = null,
-                    likes = 8,
-                    commentaar = 0,
-                    gebruikerGeliked = 0
-                )
-            ),
-            favoriteRecipes = listOf(
-                Recipe(
-                    id = 1,
-                    titel = "Spaghetti Bolognese",
-                    ingredienten = "Pasta, minced meat, tomato sauce",
-                    stappen = "Cook pasta. Fry meat. Mix.",
-                    tijd = 30,
-                    datumAangemaakt = "2025-01-01",
-                    gebruikerAangemaaktId = 288,
-                    gebruikerAangemaaktAlias = "Ines",
-                    afbeelding = null,
-                    likes = 12,
-                    commentaar = 1,
-                    gebruikerGeliked = 1
-                )
-            ),
-            searchResults = emptyList(),
+            recipes = sampleRecipesPreview,
+            myRecipes = sampleRecipesPreview.take(1),
+            favoriteRecipes = sampleRecipesPreview.take(1),
+            searchResults = sampleRecipesPreview,
             searchQuery = "",
-            commentsMap = mapOf(1 to listOf(Comment(recipeId = 1, author = "Lucia", text = "Lekker!"))),
-            recipeLikesMap = mapOf(1 to listOf(LikeUser(id = 1, gebruikerId = 101, alias = "Lucia", datum = "2025-01-01"))),
-            userAlias = "Ines",
+            commentsMap = emptyMap(),
+            recipeLikesMap = emptyMap(),
+            userAlias = "Chef Ines",
             isLoading = false,
             errorMessage = null,
             sortOption = SortOption.DEFAULT,
             onSortOptionSelected = {},
             onSearchQueryChanged = {},
             onLikeClick = {},
-            onAddRecipe = { _, _, _, _, onSuccess -> onSuccess() },
+            onAddRecipe = { _, _, _, _, _, _ -> },
             onDeleteRecipe = {},
             onUpdateAlias = {},
             onAddComment = { _, _, _ -> },
             onEditComment = { _, _, _ -> },
             onDeleteComment = { _, _ -> },
             onRetry = {},
-            darkTheme = darkTheme,
-            onThemeToggle = { darkTheme = !darkTheme }
+            darkTheme = false,
+            onThemeToggle = {}
         )
     }
 }
+
+@Preview(showBackground = true, name = "Recipe Screen (Dark)")
+@Composable
+fun RecipeScreenContentDarkPreview() {
+    FoodflixTheme(darkTheme = true) {
+        RecipeScreenContent(
+            recipes = sampleRecipesPreview,
+            myRecipes = sampleRecipesPreview.take(1),
+            favoriteRecipes = sampleRecipesPreview.take(1),
+            searchResults = sampleRecipesPreview,
+            searchQuery = "",
+            commentsMap = emptyMap(),
+            recipeLikesMap = emptyMap(),
+            userAlias = "Chef Ines",
+            isLoading = false,
+            errorMessage = null,
+            sortOption = SortOption.DEFAULT,
+            onSortOptionSelected = {},
+            onSearchQueryChanged = {},
+            onLikeClick = {},
+            onAddRecipe = { _, _, _, _, _, _ -> },
+            onDeleteRecipe = {},
+            onUpdateAlias = {},
+            onAddComment = { _, _, _ -> },
+            onEditComment = { _, _, _ -> },
+            onDeleteComment = { _, _ -> },
+            onRetry = {},
+            darkTheme = true,
+            onThemeToggle = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Recipe Card Preview")
+@Composable
+fun RecipeItemCardPreview() {
+    FoodflixTheme {
+        RecipeItemCard(
+            recipe = sampleRecipesPreview.first(),
+            onLikeClick = {},
+            onClick = {}
+        )
+    }
+}
+
