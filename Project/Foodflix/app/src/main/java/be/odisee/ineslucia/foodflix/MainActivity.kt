@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Home
@@ -40,36 +42,6 @@ import be.odisee.ineslucia.foodflix.ui.Comment
 import be.odisee.ineslucia.foodflix.ui.RecipeViewModel
 import be.odisee.ineslucia.foodflix.ui.SortOption
 import be.odisee.ineslucia.foodflix.ui.theme.FoodflixTheme
-
-/**
- * ============================================================================
- * FOODFLIX APP - ARCHITECTURE & CONFIGURATION OVERVIEW
- * ============================================================================
- *
- * 1. RETROFIT (Networking):
- *    - Configured in [be.odisee.ineslucia.foodflix.network.RecipeApiService].
- *    - Handles REST API communication (fetching recipes, adding recipes, liking/unliking,
- *      deleting recipes, and fetching likes) using OkHttp and Gson Converter.
- *
- * 2. NAVIGATION (UI Flow):
- *    - Implemented via Jetpack Compose state-driven navigation and bottom tabs (Home, Favorites, Profile).
- *    - Dynamic routing to `RecipeDetailScreen` when selecting a recipe, plus dialogs for adding recipes and editing profiles.
- *
- * 3. DATASTORE / FAVORITES (State & Persistence):
- *    - Favorites, user aliases, comments, and sorting preferences are managed reactively
- *      via [RecipeViewModel] and synchronized with backend API persistence.
- *
- * 4. THEME CONFIGURATION & APP ICONS:
- *    - Theme: Material 3 dynamic color scheme configured in [be.odisee.ineslucia.foodflix.ui.theme.FoodflixTheme]
- *      with manual light/dark mode toggling support.
- *    - App Icons: Adaptive launcher icons configured in `res/mipmap-anydpi-v26` and `res/drawable`.
- *
- * 5. AI USAGE NOTICE:
- *    - Developed with assistance from AI development tooling (Android Studio AI Assistant),
- *      which supported architectural design, code refactoring, Jetpack Compose UI composition,
- *      and inline comment generation.
- * ============================================================================
- */
 
 /**
  * Main activity of the Foodflix application.
@@ -110,6 +82,8 @@ fun RecipeScreen(
 ) {
     RecipeScreenContent(
         recipes = viewModel.sortedRecipes,
+        trendingRecipes = viewModel.trendingRecipes,
+        quickRecipes = viewModel.quickRecipes,
         myRecipes = viewModel.myRecipes,
         favoriteRecipes = viewModel.favoriteRecipes,
         searchResults = viewModel.searchResults,
@@ -139,13 +113,15 @@ fun RecipeScreen(
 }
 
 /**
- * Main UI content layout containing bottom navigation tabs (Home, Search, Favorites, Profile),
+ * Main UI content layout containing bottom navigation tabs (Home, Discover, Search, Favorites, Profile),
  * top app bar, theme toggle, floating action buttons, and screen switching logic.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeScreenContent(
     recipes: List<Recipe>,
+    trendingRecipes: List<Recipe>,
+    quickRecipes: List<Recipe>,
     myRecipes: List<Recipe>,
     favoriteRecipes: List<Recipe>,
     searchResults: List<Recipe>,
@@ -172,7 +148,7 @@ fun RecipeScreenContent(
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
     var selectedRecipe by remember { mutableStateOf<Recipe?>(null) }
-    var selectedTab by remember { mutableIntStateOf(0) } // 0 = Home, 1 = Search, 2 = Favorites, 3 = Profile
+    var selectedTab by remember { mutableIntStateOf(0) } // 0 = Home, 1 = Discover, 2 = Search, 3 = Favorites, 4 = Profile
 
     when {
         selectedRecipe != null -> {
@@ -197,8 +173,9 @@ fun RecipeScreenContent(
                             Text(
                                 when (selectedTab) {
                                     0 -> "Foodflix Recipes"
-                                    1 -> "Search Recipes"
-                                    2 -> "Favorite Recipes"
+                                    1 -> "Foodflix Discover"
+                                    2 -> "Search Recipes"
+                                    3 -> "Favorite Recipes"
                                     else -> "My Profile"
                                 }
                             )
@@ -226,22 +203,28 @@ fun RecipeScreenContent(
                             onClick = { selectedTab = 0 }
                         )
                         NavigationBarItem(
-                            icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-                            label = { Text("Search") },
+                            icon = { Icon(Icons.Default.Explore, contentDescription = "Discover") },
+                            label = { Text("Discover") },
                             selected = selectedTab == 1,
                             onClick = { selectedTab = 1 }
                         )
                         NavigationBarItem(
-                            icon = { Icon(Icons.Default.Favorite, contentDescription = "Favorites") },
-                            label = { Text("Favorites") },
+                            icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                            label = { Text("Search") },
                             selected = selectedTab == 2,
                             onClick = { selectedTab = 2 }
                         )
                         NavigationBarItem(
-                            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-                            label = { Text("Profile") },
+                            icon = { Icon(Icons.Default.Favorite, contentDescription = "Favorites") },
+                            label = { Text("Favorites") },
                             selected = selectedTab == 3,
                             onClick = { selectedTab = 3 }
+                        )
+                        NavigationBarItem(
+                            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+                            label = { Text("Profile") },
+                            selected = selectedTab == 4,
+                            onClick = { selectedTab = 4 }
                         )
                     }
                 },
@@ -304,6 +287,15 @@ fun RecipeScreenContent(
                             }
                         }
                         1 -> {
+                            DiscoverTabContent(
+                                recipes = recipes,
+                                trendingRecipes = trendingRecipes,
+                                quickRecipes = quickRecipes,
+                                onLikeClick = onLikeClick,
+                                onItemClick = { recipe -> selectedRecipe = recipe }
+                            )
+                        }
+                        2 -> {
                             SearchTabContent(
                                 searchQuery = searchQuery,
                                 onQueryChanged = onSearchQueryChanged,
@@ -312,7 +304,7 @@ fun RecipeScreenContent(
                                 onItemClick = { recipe -> selectedRecipe = recipe }
                             )
                         }
-                        2 -> {
+                        3 -> {
                             FavoritesTabContent(
                                 favoriteRecipes = favoriteRecipes,
                                 onLikeClick = onLikeClick,
@@ -342,6 +334,181 @@ fun RecipeScreenContent(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * Netflix-style Discover / Browse feed with featured banner, horizontal category rows, and recipe feeds.
+ */
+@Composable
+fun DiscoverTabContent(
+    recipes: List<Recipe>,
+    trendingRecipes: List<Recipe>,
+    quickRecipes: List<Recipe>,
+    onLikeClick: (Recipe) -> Unit,
+    onItemClick: (Recipe) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+            Text(
+                text = "What's on the menu today?",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = {
+                    if (recipes.isNotEmpty()) {
+                        onItemClick(recipes.random())
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("🎲 Surprise me")
+            }
+        }
+
+        // Featured Banner (Top recipe)
+        if (trendingRecipes.isNotEmpty()) {
+            val featured = trendingRecipes.first()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(260.dp)
+                    .clickable { onItemClick(featured) }
+            ) {
+                if (!featured.afbeelding.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = featured.afbeelding,
+                        contentDescription = featured.titel,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.BottomStart
+                ) {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = "🔥 Featured Recipe",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = featured.titel,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Text(
+                                text = "⏱️ ${featured.tijd} min | ❤️ ${featured.likes} likes",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Section: Trending / Popular
+        if (trendingRecipes.isNotEmpty()) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "🔥 Trending Now",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(trendingRecipes) { recipe ->
+                        NetflixRecipeCard(recipe = recipe, onLikeClick = onLikeClick, onClick = { onItemClick(recipe) })
+                    }
+                }
+            }
+        }
+
+        // Section: Quick & Easy
+        if (quickRecipes.isNotEmpty()) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "⏱️ Quick & Easy (30 mins or less)",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(quickRecipes) { recipe ->
+                        NetflixRecipeCard(recipe = recipe, onLikeClick = onLikeClick, onClick = { onItemClick(recipe) })
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Netflix-style vertical thumbnail card for horizontal carousels.
+ */
+@Composable
+fun NetflixRecipeCard(recipe: Recipe, onLikeClick: (Recipe) -> Unit, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .width(150.dp)
+            .clickable { onClick() },
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Column {
+            if (!recipe.afbeelding.isNullOrEmpty()) {
+                AsyncImage(
+                    model = recipe.afbeelding,
+                    contentDescription = recipe.titel,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Foodflix")
+                }
+            }
+            Column(modifier = Modifier.padding(8.dp)) {
+                Text(
+                    text = recipe.titel,
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 1
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "${recipe.tijd} min",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
@@ -1095,55 +1262,55 @@ fun RecipeItemCard(recipe: Recipe, onLikeClick: (Recipe) -> Unit, onClick: () ->
     }
 }
 
-// ==========================================
-// PREVIEWS
-// ==========================================
-
-private val sampleRecipesPreview: List<Recipe>
-    get() = listOf(
-    Recipe(
-        id = 1,
-        titel = "Spaghetti Carbonara",
-        ingredienten = "Spaghetti, Eieren, Guanciale, Pecorino, Peper",
-        stappen = "1. Kook pasta. 2. Bak guanciale. 3. Meng eieren met kaas. 4. Voeg samen.",
-        tijd = 20,
-        datumAangemaakt = "2025-01-15 12:00:00",
-        gebruikerAangemaaktId = 288,
-        gebruikerAangemaaktAlias = "Chef Ines",
-        afbeelding = "https://images.unsplash.com/photo-1612874742237-6526221588e3",
-        likes = 12,
-        commentaar = 3,
-        gebruikerGeliked = 1
-    ),
-    Recipe(
-        id = 2,
-        titel = "Pannenkoeken",
-        ingredienten = "Bloem, Melk, Eieren, Boter",
-        stappen = "1. Meng ingrediënten. 2. Bak in de pan.",
-        tijd = 15,
-        datumAangemaakt = "2025-01-16 10:00:00",
-        gebruikerAangemaaktId = 100,
-        gebruikerAangemaaktAlias = "Lucia",
-        afbeelding = null,
-        likes = 5,
-        commentaar = 1,
-        gebruikerGeliked = 0
-    )
-)
-
-@Preview(showBackground = true, name = "Recipe Screen (Light)")
+/**
+ * Preview for [RecipeScreenContent] with mock data for Android Studio Compose Preview.
+ */
+@Preview(showBackground = true)
 @Composable
 fun RecipeScreenContentPreview() {
-    FoodflixTheme(darkTheme = false) {
+    val sampleRecipes = listOf(
+        Recipe(
+            id = 1,
+            titel = "Pasta Carbonara",
+            ingredienten = "Pasta, Eieren, Spek, Parmigiano",
+            stappen = "Kook pasta, bak spek, meng alles.",
+            tijd = 20,
+            datumAangemaakt = "2025-01-01",
+            gebruikerAangemaaktId = 288,
+            gebruikerAangemaaktAlias = "Chef Ines",
+            afbeelding = null,
+            likes = 12,
+            commentaar = 3,
+            gebruikerGeliked = 1
+        ),
+        Recipe(
+            id = 2,
+            titel = "Margherita Pizza",
+            ingredienten = "Deeg, Tomatensaus, Mozzarella, Basilicum",
+            stappen = "Beleg deeg en bak in de oven op 220 graden.",
+            tijd = 30,
+            datumAangemaakt = "2025-01-02",
+            gebruikerAangemaaktId = 288,
+            gebruikerAangemaaktAlias = "Chef Lucia",
+            afbeelding = null,
+            likes = 8,
+            commentaar = 1,
+            gebruikerGeliked = 0
+        )
+    )
+
+    FoodflixTheme {
         RecipeScreenContent(
-            recipes = sampleRecipesPreview,
-            myRecipes = sampleRecipesPreview.take(1),
-            favoriteRecipes = sampleRecipesPreview.take(1),
-            searchResults = sampleRecipesPreview,
+            recipes = sampleRecipes,
+            trendingRecipes = sampleRecipes,
+            quickRecipes = sampleRecipes,
+            myRecipes = sampleRecipes,
+            favoriteRecipes = sampleRecipes,
+            searchResults = emptyList(),
             searchQuery = "",
             commentsMap = emptyMap(),
             recipeLikesMap = emptyMap(),
-            userAlias = "Chef Ines",
+            userAlias = "Test User",
             isLoading = false,
             errorMessage = null,
             sortOption = SortOption.DEFAULT,
@@ -1163,44 +1330,30 @@ fun RecipeScreenContentPreview() {
     }
 }
 
-@Preview(showBackground = true, name = "Recipe Screen (Dark)")
-@Composable
-fun RecipeScreenContentDarkPreview() {
-    FoodflixTheme(darkTheme = true) {
-        RecipeScreenContent(
-            recipes = sampleRecipesPreview,
-            myRecipes = sampleRecipesPreview.take(1),
-            favoriteRecipes = sampleRecipesPreview.take(1),
-            searchResults = sampleRecipesPreview,
-            searchQuery = "",
-            commentsMap = emptyMap(),
-            recipeLikesMap = emptyMap(),
-            userAlias = "Chef Ines",
-            isLoading = false,
-            errorMessage = null,
-            sortOption = SortOption.DEFAULT,
-            onSortOptionSelected = {},
-            onSearchQueryChanged = {},
-            onLikeClick = {},
-            onAddRecipe = { _, _, _, _, _, _ -> },
-            onDeleteRecipe = {},
-            onUpdateAlias = {},
-            onAddComment = { _, _, _ -> },
-            onEditComment = { _, _, _ -> },
-            onDeleteComment = { _, _ -> },
-            onRetry = {},
-            darkTheme = true,
-            onThemeToggle = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Recipe Card Preview")
+/**
+ * Preview for individual [RecipeItemCard] with mock data.
+ */
+@Preview(showBackground = true)
 @Composable
 fun RecipeItemCardPreview() {
+    val sampleRecipe = Recipe(
+        id = 1,
+        titel = "Pasta Carbonara",
+        ingredienten = "Pasta, Eieren, Spek, Parmigiano",
+        stappen = "Kook pasta, bak spek, meng alles.",
+        tijd = 20,
+        datumAangemaakt = "2025-01-01",
+        gebruikerAangemaaktId = 288,
+        gebruikerAangemaaktAlias = "Chef Ines",
+        afbeelding = null,
+        likes = 12,
+        commentaar = 3,
+        gebruikerGeliked = 1
+    )
+
     FoodflixTheme {
         RecipeItemCard(
-            recipe = sampleRecipesPreview.first(),
+            recipe = sampleRecipe,
             onLikeClick = {},
             onClick = {}
         )

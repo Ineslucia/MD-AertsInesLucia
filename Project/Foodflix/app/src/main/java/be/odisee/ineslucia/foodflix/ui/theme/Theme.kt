@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = FoodFlixPink,
+    primary = IconBurgundyDark,
     secondary = FoodFlixPinkLight,
     background = DarkBackground,
     surface = DarkSurface,
@@ -24,7 +24,7 @@ private val DarkColorScheme = darkColorScheme(
 
 private val LightColorScheme = lightColorScheme(
     primary = FoodFlixPink,
-    secondary = FoodFlixPinkLight,
+    secondary = IconPinkLight,
     background = LightBackground,
     surface = LightSurface,
     onPrimary = Color.White,
@@ -36,7 +36,6 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun FoodflixTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is disabled by default to showcase the FoodFlix pink brand colors
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {

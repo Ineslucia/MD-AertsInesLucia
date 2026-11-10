@@ -11,6 +11,9 @@ import be.odisee.ineslucia.foodflix.network.RecipeApiService
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+/**
+ * Data model representing a comment on a recipe.
+ */
 data class Comment(
     val id: String = UUID.randomUUID().toString(),
     val recipeId: Int,
@@ -19,21 +22,31 @@ data class Comment(
     val date: String = android.text.format.DateFormat.format("yyyy-MM-dd HH:mm", java.util.Date()).toString()
 )
 
+/**
+ * Enum defining available sorting criteria for recipes.
+ */
 enum class SortOption {
     DEFAULT,
     LIKES,
     DATE
 }
 
+/**
+ * ViewModel responsible for managing UI state, business logic, Retrofit network requests,
+ * favorites, comments, sorting, and user profile data for the Foodflix app.
+ */
 class RecipeViewModel : ViewModel() {
     private val apiService = RecipeApiService.create()
 
+    // State holding the list of all recipes
     var recipes by mutableStateOf<List<Recipe>>(emptyList())
         private set
 
+    // State holding the active sort option
     var sortOption by mutableStateOf(SortOption.DEFAULT)
         private set
 
+    // Computed property for sorted recipes based on current sort option
     val sortedRecipes: List<Recipe>
         get() = when (sortOption) {
             SortOption.DEFAULT -> recipes
@@ -41,12 +54,23 @@ class RecipeViewModel : ViewModel() {
             SortOption.DATE -> recipes.sortedByDescending { it.datumAangemaakt ?: "" }
         }
 
+    // Computed property for trending recipes (sorted by likes)
+    val trendingRecipes: List<Recipe>
+        get() = recipes.sortedByDescending { it.likes }
+
+    // Computed property for quick recipes (cooking time <= 30 mins)
+    val quickRecipes: List<Recipe>
+        get() = recipes.filter { it.tijd <= 30 }
+
+    // Computed property for recipes created by the current user
     val myRecipes: List<Recipe>
         get() = recipes.filter { it.gebruikerAangemaaktId == 288 || it.gebruikerAangemaaktAlias == "Learn Kotlin today?" }
 
+    // Computed property for bookmarked favorite recipes
     val favoriteRecipes: List<Recipe>
         get() = recipes.filter { it.gebruikerGeliked == 1 }
 
+    // State holding search query text
     var searchQuery by mutableStateOf("")
         private set
 
@@ -54,6 +78,7 @@ class RecipeViewModel : ViewModel() {
         searchQuery = query
     }
 
+    // Computed property for recipes matching the search query
     val searchResults: List<Recipe>
         get() = if (searchQuery.isBlank()) {
             recipes
@@ -63,6 +88,7 @@ class RecipeViewModel : ViewModel() {
 
     private var customUserAlias by mutableStateOf<String?>(null)
 
+    // Current user alias/name
     val userAlias: String
         get() = customUserAlias ?: (recipes.firstOrNull { it.gebruikerAangemaaktId == 288 }?.gebruikerAangemaaktAlias ?: "Foodflix User")
 
@@ -70,12 +96,15 @@ class RecipeViewModel : ViewModel() {
         customUserAlias = newName
     }
 
+    // Map storing comments per recipe ID
     var commentsMap by mutableStateOf<Map<Int, List<Comment>>>(emptyMap())
         private set
 
+    // Map storing likes users list per recipe ID
     var recipeLikesMap by mutableStateOf<Map<Int, List<LikeUser>>>(emptyMap())
         private set
 
+    /** Fetch likes users for a specific recipe */
     fun fetchLikesForRecipe(recipeId: Int) {
         viewModelScope.launch {
             try {
@@ -88,27 +117,32 @@ class RecipeViewModel : ViewModel() {
         }
     }
 
+    /** Add a comment to a recipe */
     fun addComment(recipeId: Int, text: String, author: String) {
         val currentList = commentsMap[recipeId] ?: emptyList()
         val newComment = Comment(recipeId = recipeId, author = author, text = text)
         commentsMap = commentsMap + (recipeId to (currentList + newComment))
     }
 
+    /** Edit an existing comment */
     fun editComment(recipeId: Int, commentId: String, newText: String) {
         val currentList = commentsMap[recipeId] ?: return
         val updatedList = currentList.map { if (it.id == commentId) it.copy(text = newText) else it }
         commentsMap = commentsMap + (recipeId to updatedList)
     }
 
+    /** Delete a comment */
     fun deleteComment(recipeId: Int, commentId: String) {
         val currentList = commentsMap[recipeId] ?: return
         val updatedList = currentList.filter { it.id != commentId }
         commentsMap = commentsMap + (recipeId to updatedList)
     }
 
+    // Loading state for network requests
     var isLoading by mutableStateOf(false)
         private set
 
+    // Error message state
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
@@ -120,6 +154,7 @@ class RecipeViewModel : ViewModel() {
         sortOption = option
     }
 
+    /** Fetch all recipes from the backend via Retrofit */
     fun fetchRecipes() {
         viewModelScope.launch {
             isLoading = true
@@ -137,6 +172,7 @@ class RecipeViewModel : ViewModel() {
         }
     }
 
+    /** Add a new recipe */
     fun addRecipe(
         titel: String,
         ingredienten: String,
@@ -157,6 +193,7 @@ class RecipeViewModel : ViewModel() {
         }
     }
 
+    /** Delete a recipe */
     fun deleteRecipe(recipeId: Int) {
         viewModelScope.launch {
             try {
@@ -169,6 +206,7 @@ class RecipeViewModel : ViewModel() {
         }
     }
 
+    /** Toggle like status for a recipe */
     fun toggleLike(recipe: Recipe) {
         viewModelScope.launch {
             try {
