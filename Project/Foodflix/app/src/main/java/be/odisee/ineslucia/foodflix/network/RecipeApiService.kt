@@ -19,6 +19,18 @@ data class RecipeAddResponse(
     @SerializedName("id") val id: String?
 )
 
+data class LikeUserResponse(
+    @SerializedName("status") val status: Int,
+    @SerializedName("data") val data: List<LikeUser>
+)
+
+data class LikeUser(
+    @SerializedName("id") val id: Int,
+    @SerializedName("gebruikerId") val gebruikerId: Int,
+    @SerializedName("alias") val alias: String,
+    @SerializedName("datum") val datum: String
+)
+
 interface RecipeApiService {
     @GET("recepten")
     suspend fun getAllRecipes(
@@ -52,6 +64,12 @@ interface RecipeApiService {
         @Header("Authorization") token: String,
         @Path("id") recipeId: Int
     ): RecipeAddResponse
+
+    @GET("recepten/{id}/likes")
+    suspend fun getRecipeLikes(
+        @Header("Authorization") token: String,
+        @Path("id") recipeId: Int
+    ): LikeUserResponse
 
     companion object {
         private const val BASE_URL = "https://stevenop.be/recipes/api/"
