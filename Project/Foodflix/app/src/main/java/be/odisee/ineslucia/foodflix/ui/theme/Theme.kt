@@ -12,25 +12,37 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = IconBurgundyDark,
-    secondary = FoodFlixPinkLight,
-    background = DarkBackground,
-    surface = DarkSurface,
+    primary = IconBurgundyDark, // #6B1D2F
     onPrimary = Color.White,
+    primaryContainer = Color(0xFF3F0B15),
+    onPrimaryContainer = Color(0xFFFFD9DF),
+    secondary = FoodFlixPinkLight,
     onSecondary = Color.Black,
+    secondaryContainer = Color(0xFF521C2B),
+    onSecondaryContainer = Color(0xFFFFD9DF),
+    background = DarkBackground,
     onBackground = Color.White,
-    onSurface = Color.White
+    surface = DarkSurface,
+    onSurface = Color.White,
+    surfaceVariant = Color(0xFF2C2C2C),
+    onSurfaceVariant = Color(0xFFD8D2D2)
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = FoodFlixPink,
-    secondary = IconPinkLight,
-    background = LightBackground,
-    surface = LightSurface,
     onPrimary = Color.White,
+    primaryContainer = Color(0xFFFFD9DF),
+    onPrimaryContainer = Color(0xFF3F0B15),
+    secondary = IconPinkLight,
     onSecondary = Color.Black,
+    secondaryContainer = Color(0xFFFFEEF3),
+    onSecondaryContainer = Color(0xFF4A1220),
+    background = LightBackground,
     onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F)
+    surface = LightSurface,
+    onSurface = Color(0xFF1C1B1F),
+    surfaceVariant = Color(0xFFF7E9EE),
+    onSurfaceVariant = Color(0xFF524346)
 )
 
 @Composable
