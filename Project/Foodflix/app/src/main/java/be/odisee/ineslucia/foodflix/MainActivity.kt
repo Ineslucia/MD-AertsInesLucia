@@ -72,7 +72,6 @@ class MainActivity : ComponentActivity() {
  * Wrapper composable that connects the [RecipeViewModel] state and actions
  * to the stateless [RecipeScreenContent].
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeScreen(
     darkTheme: Boolean,
@@ -478,23 +477,38 @@ fun NetflixRecipeCard(recipe: Recipe, onLikeClick: (Recipe) -> Unit, onClick: ()
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column {
-            if (!recipe.afbeelding.isNullOrEmpty()) {
-                AsyncImage(
-                    model = recipe.afbeelding,
-                    contentDescription = recipe.titel,
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+            ) {
+                if (!recipe.afbeelding.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = recipe.afbeelding,
+                        contentDescription = recipe.titel,
+                        modifier = Modifier.fillMaxWidth(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Foodflix")
+                    }
+                }
+                IconButton(
+                    onClick = { onLikeClick(recipe) },
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp),
-                    contentAlignment = Alignment.Center
+                        .align(Alignment.TopEnd)
+                        .size(32.dp)
+                        .padding(4.dp)
                 ) {
-                    Text("Foodflix")
+                    Icon(
+                        imageVector = if (recipe.gebruikerGeliked == 1) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Like",
+                        tint = if (recipe.gebruikerGeliked == 1) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
             Column(modifier = Modifier.padding(8.dp)) {
