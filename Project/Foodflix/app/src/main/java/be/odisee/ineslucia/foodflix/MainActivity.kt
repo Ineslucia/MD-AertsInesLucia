@@ -317,7 +317,9 @@ fun RecipeScreenContent(
                                 onDeleteRecipe = onDeleteRecipe,
                                 onUpdateAlias = onUpdateAlias,
                                 darkTheme = darkTheme,
-                                onThemeToggle = onThemeToggle
+                                onThemeToggle = onThemeToggle,
+                                requestCount = 0,
+                                userErvaring = 0
                             )
                         }
                     }
@@ -637,7 +639,9 @@ fun ProfileTabContent(
     onDeleteRecipe: (Int) -> Unit,
     onUpdateAlias: (String) -> Unit,
     darkTheme: Boolean,
-    onThemeToggle: () -> Unit
+    onThemeToggle: () -> Unit,
+    requestCount: Int,
+    userErvaring: Int
 ) {
     var showEditDialog by remember { mutableStateOf(false) }
 
@@ -663,7 +667,7 @@ fun ProfileTabContent(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "User ID: 288 | Added Recipes: ${myRecipes.size}",
+                    text = "User ID: 291 | Added Recipes: ${myRecipes.size}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -673,6 +677,25 @@ fun ProfileTabContent(
                 }
             }
         }
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedButton(onClick ={ showEditDialog = true}) {
+                Text("Edit Ervaring")
+    }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Ervaring: $userErvaring",
+                    style = MaterialTheme.typography.titleMedium
+                )
 
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -735,7 +758,48 @@ fun ProfileTabContent(
         }
     }
 }
+        //Composable to edit the expirience of the user in years from 0 to 99
+@Composable
+fun EditUserErvaring(
+            currentErvaring: Int,
+            onDismiss: () -> Unit,
+            onSave: (String) -> Unit,
+            isNotBlank: Int.() -> Boolean
+        ) {
+    var ervaring by remember { mutableStateOf(value = currentErvaring) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Ervaring") },
+        text = {
+            OutlinedTextField(
+            value = ervaring,
+            onValueChange = { ervaring = it},
+            label = {Text("Ervaring/Expirience") },
+            modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (ervaring.isNotBlank()) {
+                        onSave(ervaring)
+                    }
+                }
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+                }
+            )
+        }
+    )
+}
 
+    }
 /**
  * Dialog composable allowing users to update their user name or alias.
  */
